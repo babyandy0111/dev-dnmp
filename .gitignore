@@ -1,3 +1,5 @@
 !.gitignore
 elasticsearch/data/*
 etcd/*/data/*
+log/mysql.slow.log
+log/php.fpm.error.log
