@@ -112,3 +112,4 @@ RUN pecl install mongodb
 #    && ./configure \
 #    && make \
 #    && cp modules/xdebug.so /usr/local/lib/php/extensions/no-debug-non-zts-20170718
+RUN chown -R www-data:www-data /var/www/html
