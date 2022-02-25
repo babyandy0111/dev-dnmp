@@ -1,13 +1,14 @@
-# 透過docker 建立PHP開發環境
+# 透過docker 建立開發環境
 Nginx
 MySQL & phpmyadmin
-PHP7
+PHP54 56 72 74 
 ELK
 Mongodb & Mongo-express
 Redis & php-redis-admin
 rabbitmq & rabbitmq-management
+springboot
+nodejs golang
 
-![Demo Image](./dnmp.png)
 
 # 1. 準備docker & git
 Mac
