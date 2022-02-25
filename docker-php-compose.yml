@@ -31,18 +31,7 @@ services:
       - net-mysql
       - net-redis
 
-  composer:
-    container_name: composer
-    image: composer/composer:php7
-    working_dir: /var/www/html
-    command: global require 'laravel/installer'
-    volumes:
-      - ./www/:/var/www/html/:rw
-    networks:
-      - net-composer
-
 networks:
   net-php:
   net-mysql:
-  net-composer:
   net-redis:
