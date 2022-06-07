@@ -78,7 +78,6 @@ services:
       - ./mango/data/db:/data/db
     ports:
         - "27017:27017"
-    command: mongod --smallfiles --logpath=/dev/null # --quiet
 
   mongo-express:
     image: mongo-express
@@ -90,6 +89,9 @@ services:
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=root
       - ME_CONFIG_MONGODB_ADMINPASSWORD=example
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_BASICAUTH_USERNAME=root
+      - ME_CONFIG_BASICAUTH_PASSWORD=example
     depends_on:
       - mongo
 
