@@ -1,0 +1,35 @@
+version: '3.5'
+services:
+  gitlab:
+    container_name: gitlab
+    hostname: localhost
+    restart: unless-stopped
+    image: gitlab/gitlab-ce:latest
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['gitlab_shell_ssh_port'] = 8822
+    ports:
+      - "8000:80"
+      - "8822:22"
+    volumes:
+      - ./gitlab:/etc/gitlab
+      - ./gitlab/data/gitlab:/var/opt/gitlab
+      - ./log:/var/log/gitlab
+    networks:
+      - gitlab
+
+  gitlab-runner:
+    container_name: gitlab-runner
+    restart: unless-stopped
+    image: gitlab/gitlab-runner:alpine
+    privileged: true
+    depends_on:
+      - gitlab
+    volumes:
+      - ./gitlab/config/gitlab-runner:/etc/gitlab-runner
+      - ./gitlab/run/docker.sock:/var/run/docker.sock
+    networks:
+      - gitlab
+
+networks:
+  gitlab:

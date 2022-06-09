@@ -67,6 +67,7 @@ services:
         - net-redis
     depends_on:
         - redis
+  
   mongo:
     image: mongo
     container_name: mongo
