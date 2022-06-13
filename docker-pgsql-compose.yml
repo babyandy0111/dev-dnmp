@@ -1,0 +1,33 @@
+version: "3"
+services:
+  pgsql:
+    image: postgres:13.2-alpine
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=${PGSQL_USER}
+      - POSTGRES_PASSWORD=${PGSQL_PASSWORD}
+    volumes:
+      - ./postgresql:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - postgres-network
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    depends_on:
+      - pgsql
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PG_USER_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGSQL_PASSWORD}
+      - PGADMIN_LISTEN_PORT=${PGADMIN_LISTEN_PORT}
+    ports:
+      - "8080:80"
+    volumes:
+      - ./postgresql/pgadmin-data:/var/lib/pgadmin
+    networks:
+      - postgres-network
+
+networks:
+  postgres-network:
+    driver: bridge
