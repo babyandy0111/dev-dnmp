@@ -119,4 +119,4 @@ $ php artisan vendor:publish --provider="Barryvdh\LaravelIdeHelper\IdeHelperServ
 ```
 
 ## 7. License
-MIT
+MIT  
