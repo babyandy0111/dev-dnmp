@@ -1,0 +1,27 @@
+version: "3"
+
+# /var/www/html/wp-content/plugins/
+# wordpress-seo
+# add-wpgraphql-seo
+# user-role-editor
+# wp-graphql
+services:
+  wordpress:
+    ## 基底 image
+    # image: wordpress:6.0.0-php8.0-apache
+    ## 以當前使用的 Dockerfi;e 為 image
+    build: .
+    container_name: wordpress
+    depends_on:
+    - mysql
+    ports:
+      - "8003:80"
+
+  mysql:
+    image: mariadb:10.3
+    container_name: mysql-wordpress
+    environment:
+      MARIADB_ROOT_PASSWORD: "12345678"
+      MARIADB_DATABASE: "wordpress"
+    ports:
+      - "3308:3306"
