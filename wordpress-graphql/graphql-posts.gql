@@ -1,0 +1,79 @@
+query postsQuery {
+    posts {
+        edges {
+            node {
+                title
+                excerpt
+                content
+                slug
+                seo {
+                    canonical
+                    metaDesc
+                    metaKeywords
+                    metaRobotsNofollow
+                    metaRobotsNoindex
+                    opengraphUrl
+                    opengraphTitle
+                    opengraphSiteName
+                    opengraphImage {
+                        altText
+                        fileSize
+                        mediaItemUrl
+                    }
+                }
+                author {
+                    node {
+                        email
+                        description
+                        firstName
+                        lastName
+                        slug
+                        uri
+                        seo {
+                            breadcrumbTitle
+                            metaDesc
+                            social {
+                                facebook
+                                instagram
+                                linkedIn
+                                mySpace
+                                pinterest
+                                soundCloud
+                                twitter
+                                wikipedia
+                                youTube
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+mutation LoginUser {
+    login( input: {
+        clientMutationId: "uniqueId",
+        username: "root",
+        password: "12345678"
+    } ) {
+        authToken
+        user {
+            id
+            name
+        }
+    }
+}
+
+mutation CREATE_POST {
+    createPost(input: {
+        clientMutationId: "CreatePost"
+        title: "New Post Title"
+    }) {
+        post {
+            id
+            title
+            date
+        }
+    }
+}
