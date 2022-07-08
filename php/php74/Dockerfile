@@ -1,76 +1,104 @@
-FROM php:7.4-fpm-alpine
-# @see https://hub.docker.com/r/jpswade/php7.4-fpm-alpine
+FROM php:7.4-fpm
 
-# Install gd, iconv, mbstring, mysql, soap, sockets, zip, and zlib extensions
-# $PHPIZE_DEPS include autoconf, make...etc
-# see example at https://hub.docker.com/_/php/
-RUN apk add --update \
-		$PHPIZE_DEPS \
-		freetype-dev \
-		git \
-		libjpeg-turbo-dev \
-		libpng-dev \
-		libxml2-dev \
-		libzip-dev \
-		openssh-client \
-		php7-json \
-		php7-openssl \
-		php7-pdo \
-		php7-pdo_mysql \
-		php7-session \
-		php7-simplexml \
-		php7-tokenizer \
-		php7-xml \
-		imagemagick \
-		imagemagick-libs \
-		imagemagick-dev \
-		php7-imagick \
-		php7-pcntl \
-		php7-zip \
-		sqlite \
-	&& docker-php-ext-install iconv soap sockets exif bcmath pdo_mysql pcntl \
-	&& docker-php-ext-configure gd --with-jpeg --with-freetype \
-	&& docker-php-ext-install gd \
-	&& docker-php-ext-install zip
+#RUN apk add --update \
+#		$PHPIZE_DEPS \
+#		freetype-dev \
+#		libjpeg-turbo-dev \
+#		libpng-dev \
+#		libxml2-dev \
+#		libzip-dev \
+#		openssh-client \
+#		php7-json \
+#		php7-openssl \
+#		php7-pdo \
+#		php7-pdo_mysql \
+#		php7-session \
+#		php7-simplexml \
+#		php7-tokenizer \
+#		php7-xml \
+#		imagemagick \
+#		imagemagick-libs \
+#		imagemagick-dev \
+#		php7-imagick \
+#		php7-pcntl \
+#		php7-zip \
+#		sqlite \
+#	&& docker-php-ext-install iconv soap sockets exif bcmath pdo_mysql pcntl
+
+RUN  --mount=type=cache,target=/var/cache/apt --mount=type=cache,target=/var/lib/apt apt-get update -y && apt-get -y install gcc \
+    curl \
+    make \
+    autoconf \
+    libc-dev \
+    pkg-config \
+    libzip-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libssl-dev \
+    libwebp-dev \
+    libmcrypt-dev \
+    vim
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+	&& docker-php-ext-install -j$(nproc) gd
+
+RUN set -xe; \
+    apt-get update -yqq && \
+    pecl channel-update pecl.php.net && \
+    apt-get install -yqq \
+    apt-utils \
+    libzip-dev zip unzip && \
+    docker-php-ext-configure zip; \
+    docker-php-ext-install zip && \
+    php -m | grep -q 'zip'
 
 # add mysqli
-RUN printf "\n" | docker-php-ext-install mysqli
+RUN printf "\n" | docker-php-ext-install mysqli pdo pdo_mysql
 
-# add intl
-RUN printf "\n" | apk add --update \
-		icu-dev \
-	&& docker-php-ext-configure intl \
-	&& docker-php-ext-install intl
+###########################################################################
+# Human Language and Character Encoding Support:
+###########################################################################
+RUN apt-get install -y libicu-dev g++ --fix-missing && \
+    docker-php-ext-configure intl && \
+    docker-php-ext-install intl
 
-# add mcrypt
-RUN printf "\n" | apk add --update \
-		libmcrypt-dev \
-	&& pecl install \
-					mcrypt && \
-	docker-php-ext-enable mcrypt
+###########################################################################
+# ImageMagick:
+###########################################################################
+RUN apt-get install -y libmagickwand-dev imagemagick && \
+    pecl install imagick && \
+    docker-php-ext-enable imagick
 
-# add imagick
-RUN printf "\n" | pecl install \
-		imagick && \
-		docker-php-ext-enable --ini-name 20-imagick.ini imagick
-
-# add pcov
-RUN printf "\n" | pecl install \
-		pcov && \
-		docker-php-ext-enable pcov
+###########################################################################
+# for geoip_country_code_by_name()
+###########################################################################
+RUN apt-get install -y geoip-database libgeoip-dev && \
+    pecl install geoip-beta && \
+    docker-php-ext-enable geoip
 
 # add composer
-RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
-	&& php composer-setup.php \
-	&& php -r "unlink('composer-setup.php');" \
-	&& mv composer.phar /usr/bin/composer
+RUN curl -sSL https://getcomposer.org/installer | php \
+    && mv composer.phar /usr/local/bin/composer
 
-# setup timezone
-RUN sed -i 's/;date.timezone =/date.timezone = "Asia\/Taipei"/g' /etc/php7/php.ini
+###########################################################################
+# PHP REDIS EXTENSION
+###########################################################################
+RUN pecl install -o -f redis-3.1.6 && \
+    docker-php-ext-enable redis
+
+###########################################################################
+# Set Timezone
+###########################################################################
+
+ARG TZ=UTC
+ENV TZ ${TZ}
+
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN docker-php-ext-install bcmath
+
 
 # change www-data's uid and gid for laravel folder permisstion
-RUN apk --no-cache add shadow && \
-    usermod -u 1000 www-data && \
-    groupmod -g 1000 www-data
-
+RUN groupmod -o -g 1000 www-data && \
+    usermod -o -u 1000 -g www-data www-data
 #EOF
