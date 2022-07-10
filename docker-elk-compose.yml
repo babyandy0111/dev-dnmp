@@ -14,6 +14,7 @@ services:
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
     networks:
       - net-elk
+      - net-php
 
   kibana:
     image: blacktop/kibana:7.10.2
@@ -29,9 +30,10 @@ services:
       - elasticsearch
     networks:
       - net-elk
+      - net-php
 
   logstash:
-    image: elastic/logstash:${ELK_VERSION}
+    image: logstash:${ELK_VERSION}
     container_name: logstash
     hostname: logstash
     ports:
@@ -49,7 +51,8 @@ services:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     networks:
       - net-elk
+      - net-php
 
 networks:
   net-elk:
-    driver: bridge
+  net-php:

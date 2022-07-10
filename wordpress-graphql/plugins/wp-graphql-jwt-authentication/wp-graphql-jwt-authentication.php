@@ -24,6 +24,8 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
+define( 'GRAPHQL_JWT_AUTH_SECRET_KEY', 'your-secret-token' );
+
 /**
  * If the codeception remote coverage file exists, require it.
  *

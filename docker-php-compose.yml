@@ -30,8 +30,10 @@ services:
       - net-php
       - net-mysql
       - net-redis
+      - net-elk
 
 networks:
   net-php:
   net-mysql:
   net-redis:
+  net-elk:
