@@ -12,6 +12,7 @@ services:
     volumes:
       - ./elasticsearch/data/:/usr/share/elasticsearch/data/:rw
       - ./elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    command: ['bin/elasticsearch-plugin', 'install', 'analysis-icu']
     networks:
       - net-elk
       - net-php
