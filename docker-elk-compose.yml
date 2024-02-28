@@ -18,7 +18,7 @@ services:
       - net-php
 
   kibana:
-    image: blacktop/kibana:7.10.2
+    image: blacktop/kibana:${ELK_VERSION}
     container_name: kibana
     hostname: kibana
     environment:
@@ -34,7 +34,7 @@ services:
       - net-php
 
   logstash:
-    image: logstash:${ELK_VERSION}
+    image: docker.elastic.co/logstash/logstash:${ELK_VERSION}
     container_name: logstash
     hostname: logstash
     ports:
