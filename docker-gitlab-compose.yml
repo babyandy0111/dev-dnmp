@@ -7,6 +7,15 @@ services:
     environment:
       GITLAB_OMNIBUS_CONFIG: |
         gitlab_rails['gitlab_shell_ssh_port'] = 8822
+        # 修正 macOS Docker 掛載資料夾不支援 Unix Sockets (ENOTSUP) 的問題
+        puma['socket'] = '/tmp/puma.socket'
+        gitlab_workhorse['listen_addr'] = '/tmp/gitlab-workhorse.socket'
+        # 針對本機開發環境優化以減少記憶體佔用，避免隨機 502
+        puma['worker_processes'] = 0       # 啟用單進程模式（預設是依 CPU 核心數多進程，極度消耗記憶體）
+        puma['min_threads'] = 2            # 減少執行緒
+        puma['max_threads'] = 4
+        sidekiq['max_concurrency'] = 5     # 減少 Sidekiq 併發數（預設 20）
+        prometheus_monitoring['enable'] = false # 關閉普羅米修斯監控（節省約 300MB+ 記憶體）
     ports:
       - "8000:80"
       - "8822:22"
