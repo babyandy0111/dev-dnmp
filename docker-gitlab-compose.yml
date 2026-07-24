@@ -37,9 +37,77 @@ services:
       - gitlab
     volumes:
       - ./gitlab/config/gitlab-runner:/etc/gitlab-runner
-      - ./gitlab/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - gitlab
+
+  gitlab-runner-setup:
+    image: docker:cli
+    container_name: gitlab-runner-setup
+    restart: "no"
+    depends_on:
+      - gitlab
+      - gitlab-runner
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./gitlab/config/gitlab-runner:/etc/gitlab-runner
+    networks:
+      - gitlab
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo "====== GitLab Runner 自動化設定 ======"
+        echo "正在等待 GitLab 服務就緒..."
+        while true; do
+          STATUS=$$(docker inspect --format='{{.State.Health.Status}}' gitlab 2>/dev/null || echo "failed")
+          if [ "$$STATUS" = "healthy" ]; then
+            echo "✓ GitLab 伺服器已成功就緒！"
+            break
+          fi
+          echo -n "."
+          sleep 5
+        done
+        echo ""
+
+        CONFIG_PATH="/etc/gitlab-runner/config.toml"
+        if [ -f "$$CONFIG_PATH" ]; then
+          if docker exec gitlab-runner gitlab-runner verify >/dev/null 2>&1; then
+            echo "✓ GitLab Runner 已經成功註冊且連線中，無需重複註冊！"
+            exit 0
+          fi
+        fi
+
+        echo "正在向 GitLab 伺服器申請 Runner 註冊 Token..."
+        TOKEN=$$(docker exec gitlab gitlab-rails runner "runner = Ci::Runner.create(runner_type: 'instance_type', description: 'Local Docker Runner', active: true, run_untagged: true); puts runner.persisted? ? 'TOKEN: ' + runner.token : 'ERROR'" 2>/dev/null | grep TOKEN | awk '{print $$2}')
+
+        if [ -z "$$TOKEN" ] || [ "$$TOKEN" = "ERROR" ]; then
+          echo "✗ 無法取得註冊 Token。"
+          exit 1
+        fi
+        echo "✓ 成功獲取 Token: $$TOKEN"
+
+        echo "正在註冊 gitlab-runner 容器..."
+        docker exec gitlab-runner gitlab-runner register \
+          --non-interactive \
+          --url http://gitlab \
+          --token "$$TOKEN" \
+          --executor docker \
+          --docker-image "python:3.9-slim" \
+          --docker-volumes "/var/run/docker.sock:/var/run/docker.sock" \
+          --docker-extra-hosts "host.docker.internal:host-gateway"
+
+        echo "正在調校 config.toml 設定檔..."
+        if ! grep -q "network_mode" "$$CONFIG_PATH"; then
+          sed -i '/extra_hosts = \["host.docker.internal:host-gateway"\]/a \    network_mode = \"dev-dnmp_gitlab\"' "$$CONFIG_PATH"
+        fi
+        if ! grep -q "clone_url" "$$CONFIG_PATH"; then
+          sed -i '/url = \"http:\/\/gitlab\"/a \  clone_url = \"http:\/\/gitlab\"' "$$CONFIG_PATH"
+        fi
+
+        echo "正在重啟 gitlab-runner 套用新設定..."
+        docker restart gitlab-runner
+        echo "🎉 GitLab Runner 已經完全自動註冊與設定完成！"
 
 networks:
   gitlab:

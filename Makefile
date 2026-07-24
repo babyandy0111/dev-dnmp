@@ -15,3 +15,6 @@ pgsql:
 
 es:
 	docker-compose -f docker-elk-compose.yml up -d elasticsearch
+
+gitlab:
+	docker compose -f docker-gitlab-compose.yml up -d
