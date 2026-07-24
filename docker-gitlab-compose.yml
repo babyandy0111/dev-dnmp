@@ -6,6 +6,8 @@ services:
     image: gitlab/gitlab-ce:latest
     environment:
       GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8000'
+        nginx['listen_port'] = 80          # 強制容器內 Nginx 監聽 80 port，與 docker-compose 的 8000:80 映射對接
         gitlab_rails['gitlab_shell_ssh_port'] = 8822
         # 修正 macOS Docker 掛載資料夾不支援 Unix Sockets (ENOTSUP) 的問題
         puma['socket'] = '/tmp/puma.socket'
